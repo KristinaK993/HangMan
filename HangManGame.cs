@@ -27,7 +27,7 @@ public class HangmanGame
         _guessedLetters = new HashSet<char>();
         _remainingAttempts = 8;  // Antalet försök
 
-        // Rensa skärmen en gång i början av spelet
+        // Rensa skärmen enbart när spelet startar
         AnsiConsole.Clear();
         AnsiConsole.Write(new FigletText("HANGMAN").Centered().Color(Color.Aqua));
         AnsiConsole.MarkupLine("[bold yellow]Let's begin![/]");
@@ -36,7 +36,7 @@ public class HangmanGame
 
     private void PlayGame()
     {
-        while (_remainingAttempts > 0 && _guessedLetters.Count < _currentWord.Distinct().Count())
+        while (_remainingAttempts > 0 && !IsGameWon())
         {
             DisplayGameState();
             var guess = GetPlayerGuess();
@@ -71,7 +71,6 @@ public class HangmanGame
 
     private void DisplayGameState()
     {
-       
         // Visa ordet med rätt gissade bokstäver och "_"
         var wordDisplay = string.Join(' ', _currentWord.Select(c => _guessedLetters.Contains(c) ? c : '_'));
         AnsiConsole.MarkupLine($"[bold yellow]Word:[/] {wordDisplay}");
@@ -85,13 +84,14 @@ public class HangmanGame
 
         // Visa gubben i rätt stadium (bygg den för varje felaktig gissning)
         AnsiConsole.MarkupLine(HangmanGraphics.GetHangmanFigure(_remainingAttempts));
-
     }
 
     private char GetPlayerGuess()
     {
         AnsiConsole.Markup("[bold yellow]Enter a letter: [/]");
-        return Console.ReadKey().KeyChar.ToString().ToLower()[0];
+        char guess = Console.ReadKey().KeyChar.ToString().ToLower()[0];
+        Console.WriteLine(); 
+        return guess;
     }
 
     private bool IsValidInput(char input)
@@ -106,7 +106,7 @@ public class HangmanGame
 
     private void DisplayEndGame()
     {
-        if (_remainingAttempts > 0)
+        if (IsGameWon())
         {
             AnsiConsole.MarkupLine($"[bold green]Congratulations! You guessed the word: {_currentWord}[/]");
         }
@@ -121,7 +121,13 @@ public class HangmanGame
     {
         AnsiConsole.Markup("[bold yellow]Do you want to play again? (y/n): [/]");
         var response = Console.ReadKey().KeyChar;
-        Console.WriteLine(); // To move to the next line after input
+        Console.WriteLine(); 
         return response == 'y' || response == 'Y';
+    }
+
+    private bool IsGameWon() // metod för att kolla om spelet är vunnet
+    {
+        // Spelet är vunnit om alla bokstäver i ordet är korrekt gissade
+        return _currentWord.All(c => _guessedLetters.Contains(c));
     }
 }
