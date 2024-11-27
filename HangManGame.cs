@@ -27,18 +27,19 @@ public class HangmanGame
         _guessedLetters = new HashSet<char>();
         _remainingAttempts = 8;  // Antalet försök
 
-        // Rensa skärmen enbart när spelet startar
+        // Rensa skärmen en gång i början av spelet
         AnsiConsole.Clear();
         AnsiConsole.Write(new FigletText("HANGMAN").Centered().Color(Color.Aqua));
         AnsiConsole.MarkupLine("[bold yellow]Let's begin![/]");
-        AnsiConsole.MarkupLine("");
+        AnsiConsole.MarkupLine(""); // Separationsrad
     }
+
 
     private void PlayGame()
     {
         while (_remainingAttempts > 0 && !IsGameWon())
         {
-            DisplayGameState();
+            DisplayGameState(); // Uppdaterar hela layouten vid varje steg
             var guess = GetPlayerGuess();
 
             if (!IsValidInput(guess))
@@ -69,8 +70,19 @@ public class HangmanGame
         DisplayEndGame();
     }
 
+
     private void DisplayGameState()
     {
+        // Rensa hela skärmen
+        AnsiConsole.Clear();
+
+        // Rubrik – visas alltid överst
+        AnsiConsole.Write(new FigletText("HANGMAN").Centered().Color(Color.Aqua));
+
+        // Visa hängfiguren på rätt stadium
+        AnsiConsole.MarkupLine(HangmanGraphics.GetHangmanFigure(_remainingAttempts));
+        AnsiConsole.MarkupLine(""); // Separationsrad
+
         // Visa ordet med rätt gissade bokstäver och "_"
         var wordDisplay = string.Join(' ', _currentWord.Select(c => _guessedLetters.Contains(c) ? c : '_'));
         AnsiConsole.MarkupLine($"[bold yellow]Word:[/] {wordDisplay}");
@@ -80,19 +92,33 @@ public class HangmanGame
 
         // Visa återstående försök
         AnsiConsole.MarkupLine($"[bold yellow]Remaining Attempts:[/] {_remainingAttempts}");
-        AnsiConsole.MarkupLine(""); // En tom rad för separation
+        AnsiConsole.MarkupLine(""); // Separationsrad
 
-        // Visa gubben i rätt stadium (bygg den för varje felaktig gissning)
-        AnsiConsole.MarkupLine(HangmanGraphics.GetHangmanFigure(_remainingAttempts));
+        // Placera input-instruktionen längst ner
+        AnsiConsole.Markup("[bold green]Enter a letter: [/]");
     }
 
     private char GetPlayerGuess()
     {
-        AnsiConsole.Markup("[bold yellow]Enter a letter: [/]");
-        char guess = Console.ReadKey().KeyChar.ToString().ToLower()[0];
-        Console.WriteLine(); 
-        return guess;
+        while (true)
+        {
+            AnsiConsole.Markup("[bold yellow]Enter a letter: [/]");
+
+            var keyInfo = Console.ReadKey(true); // Läs en tangenttryckning utan att visa på skärmen
+            char guess = char.ToLower(keyInfo.KeyChar);
+
+            if (char.IsLetter(guess))
+            {
+                AnsiConsole.MarkupLine($"[italic]You guessed: {guess}[/]");
+                return guess;
+            }
+            else
+            {
+                AnsiConsole.MarkupLine("[bold red]Invalid input. Please enter a single letter.[/]");
+            }
+        }
     }
+
 
     private bool IsValidInput(char input)
     {
